@@ -11,6 +11,73 @@ changes, and explains the result in plain language. It supports stocks and
 crypto, authenticated users, configurable sensitivity, optional position
 sizes, and a shared market-data cache.
 
+> **Reviewer setup:** See [setup.md](setup.md) for step-by-step installation,
+> Supabase configuration, run commands, and the recommended product test flow.
+
+## What This Project Does
+
+Most market watchlists show a stream of prices and percentage changes. They
+answer **what the market is doing right now**, but they do not answer the more
+useful personal question: **what changed since I last checked, and what should
+I look at first?**
+
+Smart Market Watchlist is designed around that second question. It creates a
+personal, server-side checkpoint for each watchlist and compares new market
+quotes against that checkpoint. The application then ranks meaningful moves,
+compares stocks with a market index, and produces a short explanation instead
+of asking the user to interpret a grid of numbers alone.
+
+The project is intentionally focused on attention management rather than
+trying to become a complete trading terminal. It does not place trades, make
+investment recommendations, or claim to explain the news behind a price move.
+
+## Typical User Journey
+
+1. **Create an account** and sign in through the protected dashboard.
+2. **Create or select a watchlist** for the instruments the user follows.
+3. **Add stocks or crypto pairs**, such as `AAPL`, `MSFT`, or `BTC/USD`.
+4. **Establish a baseline** by using the explicit “Mark as read & update”
+   action. The current prices become the reference point for future changes.
+5. **Return later** to see what moved since that acknowledgement. Reloading the
+   page or switching tabs does not erase the changes.
+6. **Scan the briefing first**, then inspect highlighted cards, relative moves,
+   optional position impact, and the hourly graph for more detail.
+7. **Tune sensitivity** when the default meaningful-move threshold is too high
+   or too low for the watchlist.
+
+## Main Capabilities
+
+- **Personalized change detection**: compares quotes with the user's last
+  acknowledged watchlist state rather than market open.
+- **Attention-ranked dashboard**: meaningful changes appear first and receive a
+  clear “Worth a look” treatment.
+- **Market-relative context**: stock moves can be compared with `SPY` to help
+  distinguish broad market movement from individual outperformance.
+- **Plain-language briefing**: deterministic server-side text summarizes the
+  most important current changes without requiring an LLM or news provider.
+- **Explicit acknowledgement**: passive reads preserve alerts; only the user
+  action that marks changes as read advances the baseline.
+- **Position context**: optional unit counts turn percentage changes into an
+  estimated native-currency price impact.
+- **Stale-data transparency**: cached last-known-good quotes are labeled rather
+  than presented as live data.
+- **Hourly inspection**: an instrument-level graph shows the current day's
+  available hourly price movement in UTC.
+- **Shared upstream work**: the background poller refreshes the deduplicated
+  union of watched symbols so repeated user views do not multiply provider
+  requests.
+
+## Technology Stack
+
+| Layer | Technology | Role |
+| --- | --- | --- |
+| Frontend | React, Vite, Tailwind CSS | Dashboard, authentication screens, cards, and charts |
+| API | FastAPI | Authentication, watchlist routes, and market-view responses |
+| Persistence | SQLAlchemy + Supabase Postgres | Users, watchlists, items, and acknowledgement snapshots |
+| Local fallback | SQLite | Optional local development database |
+| Market data | Alpaca Market Data API | Stock and crypto quotes and hourly bars |
+| Authentication | bcrypt + JWT | Password hashing and authenticated API access |
+
 ## Product Behavior
 
 ### Meaningful changes
