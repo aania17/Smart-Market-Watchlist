@@ -14,6 +14,10 @@ sizes, and a shared market-data cache.
 > **Reviewer setup:** See [setup.md](setup.md) for step-by-step installation,
 > Supabase configuration, run commands, and the recommended product test flow.
 
+> **Vercel deployment:** Deploy `frontend/` as the Vercel project root. The
+> FastAPI backend must run separately on a persistent service such as Render,
+> Railway, Fly.io, or a VM. See [setup.md](setup.md#81-vercel-deployment).
+
 ## What This Project Does
 
 Most market watchlists show a stream of prices and percentage changes. They
@@ -284,6 +288,31 @@ on development defaults. The current compose file is intentionally minimal
 and starts the backend only; the Vite frontend is run separately during local
 development. The compose file reads `backend/.env` and does not hardcode the
 database credentials.
+
+## Vercel Deployment
+
+Vercel hosts the React/Vite frontend. It does not replace the backend: this
+application's FastAPI service starts a background quote poller and uses a
+process-local cache, so the API should run on a persistent backend service.
+
+1. Deploy `backend/` to Render, Railway, Fly.io, or another service that can
+  run `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+2. Set the backend's `SECRET_KEY`, `DATABASE_URL`, `ALPACA_API_KEY`,
+  `ALPACA_SECRET_KEY`, and `CORS_ORIGINS` environment variables. Set
+  `CORS_ORIGINS` to the final Vercel URL, for example
+  `https://your-app.vercel.app`.
+3. Create a Vercel project from this repository and set **Root Directory** to
+  `frontend`.
+4. Use the detected Vite framework and the default build command `npm run build`.
+  The included `frontend/vercel.json` preserves React Router routes by
+  rewriting browser paths to `index.html`.
+5. Add the Vercel environment variable `VITE_API_URL` with the deployed
+  backend URL, for example `https://your-api.example.com`.
+6. Redeploy the frontend after setting `VITE_API_URL`, then verify `/health`,
+  signup, login, and watchlist loading from the Vercel URL.
+
+Do not add backend secrets to Vercel. `VITE_*` values are shipped to the
+browser, so `VITE_API_URL` must contain only the public API URL.
 
 ## Configuration
 

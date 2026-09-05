@@ -846,6 +846,33 @@ The dashboard uses a dark market-grid shell with light data surfaces, blue actio
 
 ## 18. Deployment and Local Development
 
+### Vercel deployment
+
+The supported Vercel arrangement is a split deployment:
+
+- Vercel hosts the React/Vite frontend from `frontend/`.
+- A persistent service such as Render, Railway, Fly.io, or a VM hosts the
+  FastAPI backend from `backend/`.
+
+The backend should not be moved wholesale into a Vercel function in the current
+implementation. Its startup process launches a background quote poller and its
+quote cache is process-local; Vercel functions are request-driven and
+ephemeral. A future serverless architecture would need a scheduled refresh
+job and a shared cache such as Redis.
+
+The frontend includes `frontend/vercel.json` with a catch-all rewrite to
+`index.html`, which keeps React Router routes working on direct navigation and
+browser refresh.
+
+Vercel steps:
+
+1. Import the repository into Vercel.
+2. Set the Vercel **Root Directory** to `frontend`.
+3. Use the Vite preset and `npm run build`.
+4. Set `VITE_API_URL` to the public backend URL.
+5. Set backend `CORS_ORIGINS` to the exact Vercel origin.
+6. Keep all JWT, database, and Alpaca secrets on the backend only.
+
 ### Prerequisites
 
 - Python 3.10 or newer.

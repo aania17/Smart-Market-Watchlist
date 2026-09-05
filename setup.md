@@ -188,6 +188,58 @@ docker compose up --build
 
 The backend will be available at http://localhost:8000. Run the frontend separately with `npm run dev` from `frontend`.
 
+## 8.1 Vercel Deployment
+
+Vercel should host the React frontend from the `frontend/` directory. The
+FastAPI backend should remain on a persistent service such as Render, Railway,
+Fly.io, or a VM because it runs a background quote poller and maintains an
+in-process quote cache. Vercel's request-driven functions are not a suitable
+replacement for that long-running process.
+
+### Deploy the backend
+
+Deploy the `backend/` directory to your chosen persistent host with this
+start command:
+
+```text
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+Configure these backend environment variables:
+
+```env
+SECRET_KEY=replace-with-a-long-random-value
+DATABASE_URL=your-supabase-postgres-url
+ALPACA_API_KEY=your-alpaca-api-key
+ALPACA_SECRET_KEY=your-alpaca-secret-key
+CORS_ORIGINS=https://your-app.vercel.app
+```
+
+Copy the resulting public API URL and confirm `https://your-api.example.com/health`
+returns `{"status":"ok"}`.
+
+### Deploy the frontend to Vercel
+
+1. Import the GitHub repository into Vercel.
+2. Set **Root Directory** to `frontend`.
+3. Keep the Vite framework preset and `npm run build` build command.
+4. Add this Vercel environment variable:
+
+	```env
+	VITE_API_URL=https://your-api.example.com
+	```
+
+5. Deploy or redeploy the project.
+
+The included `frontend/vercel.json` rewrites all browser routes to
+`index.html`, so `/login`, `/signup`, and `/` continue to work after a direct
+refresh. Do not put `SECRET_KEY`, database credentials, or Alpaca credentials
+in Vercel. Variables beginning with `VITE_` are exposed in the browser.
+
+After deployment, test signup, login, `/health`, adding an instrument, and the
+`Mark as read & update` flow. If the browser reports a CORS error, update the
+backend `CORS_ORIGINS` value to the exact Vercel origin and restart the backend.
+
 ## 9. Troubleshooting
 
 ### `password authentication failed for user`
